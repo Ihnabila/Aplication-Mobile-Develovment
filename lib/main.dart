@@ -1,6 +1,13 @@
+import 'package:application_mobile_development/auth_profile.dart';
+import 'package:application_mobile_development/data/network/firebase_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
   runApp(const MyApp());
 }
 
@@ -11,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Aplication Mobile Develovment',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -24,7 +31,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Aplication Mobile Develovment'),
     );
   }
 }
@@ -48,68 +55,140 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  AuthProfile authProfile = AuthProfile();
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+
+    void signInWithGoogle() async {
+      await FirebaseService().signInWithGoogle().then((value) => {
+        authProfile = AuthProfile(
+            uid: value?.user?.uid ?? '',
+            name: value?.user?.displayName ?? ''
+        )
+      });
+
+      setState(() {
+
+      });
+    }
+
+    void signOut() async {
+      await FirebaseService().signOut().then((value) => {
+        authProfile = AuthProfile()
+      });
+
+      setState(() {
+
+      });
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+        appBar: AppBar(
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        body: Center(
+          child: authProfile.uid.isEmpty ? Card(
+            color: Colors.white,
+            elevation: 2,
+            margin: const EdgeInsets.all(40),
+            clipBehavior: Clip.hardEdge,
+            child: InkWell(
+              splashColor: Colors.blue.withAlpha(30),
+              onTap: () {
+                signInWithGoogle();
+              },
+              child: Container(
+                width: double.infinity,
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                    child: SizedBox(
+                        width: 225,
+                        child: Row(
+                          children: [
+                            const Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  'Sign in With Google',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 21,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                            ),
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                              height: 21,
+                              width: 21,
+                              child: SvgPicture.asset('assets/icons/ic_google.svg'),
+                            )
+                          ],
+                        )
+                    )
+                ),
+              ),
+            ),
+          ) : Card(
+            color: Colors.white,
+            elevation: 2,
+            margin: const EdgeInsets.all(16),
+            clipBehavior: Clip.hardEdge,
+            child: InkWell(
+              splashColor: Colors.blue.withAlpha(30),
+              onTap: () {
+                signOut();
+              },
+              child: Container(
+                  padding: const EdgeInsets.all(16),
+                  width: double.infinity,
+                  height: 140,
+                  child: Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            'Selamat Datang ${authProfile.name}',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 21,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Card(
+                              color: Colors.black,
+                              elevation: 2,
+                              margin: const EdgeInsets.only(top: 40),
+                              clipBehavior: Clip.hardEdge,
+                              child: InkWell(
+                                  splashColor: Colors.blue.withAlpha(30),
+                                  onTap: () {
+                                    signOut();
+                                  },
+                                  child: const SizedBox(
+                                      height: 40,
+                                      width: 100,
+                                      child: Center(
+                                        child: Text(
+                                          'Logout',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 21,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      )
+                                  )
+                              )
+                          ),
+                        ],
+                      )
+                  )
+              ),
+            ),
+          ),
+        )
     );
   }
 }
